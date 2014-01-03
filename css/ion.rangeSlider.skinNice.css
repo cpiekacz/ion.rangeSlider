@@ -62,7 +62,7 @@
     background: #ccc;
 }
 
-.irs-from, .irs-to, .irs-single {
+.irs-from, .irs-middle, .irs-to, .irs-single {
     color: #fff;
     font-size: 10px; line-height: 1.333;
     text-shadow: none;
@@ -70,7 +70,7 @@
     background: rgba(0,0,0,0.3);
     border-radius: 3px;
 }
-.lt-ie9 .irs-from, .lt-ie9 .irs-to, .lt-ie9 .irs-single {
+.lt-ie9 .irs-from, .lt-ie9 .irs-middle, .lt-ie9 .irs-to, .lt-ie9 .irs-single {
     background: #999;
 }
 

@@ -59,7 +59,7 @@
     border-radius: 4px;
 }
 
-.irs-from, .irs-to, .irs-single {
+.irs-from, .irs-middle, .irs-to, .irs-single {
     color: #fff;
     font-size: 10px; line-height: 1.333;
     text-shadow: none;
@@ -67,7 +67,7 @@
     background: #ed5565;
     border-radius: 4px;
 }
-.irs-from:after, .irs-to:after, .irs-single:after {
+.irs-from:after, .irs-middle:after, .irs-to:after, .irs-single:after {
     position: absolute; display: block; content: "";
     bottom: -6px; left: 50%;
     width: 0; height: 0;

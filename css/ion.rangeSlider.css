@@ -54,6 +54,15 @@
                 width: 300%; height: 200%;
                 background: rgba(0,0,0,0.0);
             }
+        .irs-slider.middle {
+            left: 200px;
+        }
+            .irs-slider.middle:before {
+                position: absolute; display: block; content: "";
+                top: -50%; left: -100%;
+                width: 300%; height: 200%;
+                background: rgba(0,0,0,0.0);
+            }
         .irs-slider.to {
             left: 300px;
         }
@@ -78,7 +87,7 @@
         cursor: default;
     }
 
-    .irs-from, .irs-to, .irs-single {
+    .irs-from, .irs-middle, .irs-to, .irs-single {
         position: absolute; display: block;
         top: 0; left: 0;
         cursor: default;

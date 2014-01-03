@@ -1,10 +1,6 @@
-# Ion.Range Slider 1.8.2
-
-> English description | <a href="readme.ru.md">Описание на русском</a>
+# Ion.Range Slider 1.9.0
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.2.zip">ion.rangeSlider-1.8.2.zip</a>
 
 ***
 
@@ -64,7 +60,7 @@ $("#someID").ionRangeSlider();
         <tr>
             <td>type</td>
             <td>"single"</td>
-            <td>Optional property, will select slider type from two options: <code>single</code> - for single range slider, or <code>double</code> - for double range slider</td>
+            <td>Optional property, will select slider type from three options: <code>single</code> - for single range slider, <code>double</code> - for double range slider, <code>triple</code> - for double range slider with additional middle one</td>
         </tr>
         <tr>
             <td>min</td>
@@ -80,6 +76,11 @@ $("#someID").ionRangeSlider();
             <td>from</td>
             <td>min</td>
             <td>Optional property, on default has the same value as min. overwrite default FROM setting</td>
+        </tr>
+        <tr>
+            <td>middle</td>
+            <td>from + (from - to) / 2</td>
+            <td>Optional property, on default has the value in the middle of from and to. overwrite default MIDDLE setting</td>
         </tr>
         <tr>
             <td>to</td>
@@ -206,6 +207,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* January 03, 2014 - added support for the third (middle) slider
 * October 31, 2013 - Fixed bugs: # 13, 31, 35, 37, 40, and some code optimisations
 * October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.
 * October 08, 2013 - Fixed issues #20, #21, #23, #24, #26. Removed hideText option. New method and options. Improved code style. Minor optimisations.

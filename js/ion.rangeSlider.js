@@ -1,9 +1,10 @@
 ﻿// Ion.RangeSlider
-// version 1.8.2 Build: 149
+// version 1.9.0
 // © 2013 Denis Ineshin | IonDen.com
+// © 2013 Cezary Piekacz | cezex.me
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
-// GitHub page:     https://github.com/IonDen/ion.rangeSlider
+// GitHub page:     https://github.com/cpiekacz/ion.rangeSlider
 //
 // Released under MIT licence:
 // http://ionden.com/a/plugins/licence-en.html
@@ -43,7 +44,7 @@
                 '<span class="irs">' +
                 '<span class="irs-line"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>' +
                 '<span class="irs-min">0</span><span class="irs-max">1</span>' +
-                '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>' +
+                '<span class="irs-from">0</span><span class="irs-middle">0</span><span class="irs-to">0</span><span class="irs-single">0</span>' +
                 '</span>' +
                 '<span class="irs-grid"></span>';
 
@@ -55,13 +56,18 @@
                 '<span class="irs-slider from"></span>' +
                 '<span class="irs-slider to"></span>';
 
-
+            var tripleHTML =
+                '<span class="irs-diapason"></span>' +
+                '<span class="irs-slider from"></span>' +
+                '<span class="irs-slider middle"></span>' +
+                '<span class="irs-slider to"></span>';
 
             return this.each(function () {
                 var settings = $.extend({
                     min: 10,
                     max: 100,
                     from: null,
+					middle: null,
                     to: null,
                     type: "single",
                     step: 1,
@@ -99,6 +105,9 @@
                 if (typeof settings.from !== "number") {
                     settings.from = settings.min;
                 }
+                if (typeof settings.middle !== "number") {
+                    settings.middle = (settings.to - settings.from) / 2 + settings.from;
+                }
                 if (typeof settings.to !== "number") {
                     settings.to = settings.max;
                 }
@@ -107,6 +116,9 @@
                 // extend from data-*
                 if (typeof slider.data("from") === "number") {
                     settings.from = parseFloat(slider.data("from"));
+                }
+                if (typeof slider.data("middle") === "number") {
+                    settings.middle = parseFloat(slider.data("middle"));
                 }
                 if (typeof slider.data("to") === "number") {
                     settings.to = parseFloat(slider.data("to"));
@@ -152,6 +164,20 @@
                         settings.to = settings.from;
                     }
                 }
+                if (settings.type === "triple") {
+                    if (settings.from > settings.to) {
+                        settings.from = settings.to;
+                    }
+                    if (settings.to < settings.from) {
+                        settings.to = settings.from;
+                    }
+                    if (settings.middle > settings.to) {
+                        settings.middle = settings.to;
+                    }
+                    if (settings.middle < settings.from) {
+                        settings.middle = settings.from;
+                    }
+                }
 
 
                 var prettify = function (num) {
@@ -174,10 +200,12 @@
                     $fieldMin,
                     $fieldMax,
                     $fieldFrom,
+					$fieldMiddle,
                     $fieldTo,
                     $fieldSingle,
                     $singleSlider,
                     $fromSlider,
+                    $middleSlider,
                     $toSlider,
                     $activeSlider,
                     $diapason,
@@ -195,7 +223,7 @@
                     fullWidth = 0,
                     sliderWidth = 0,
                     width = 0,
-                    left = 0,
+					left = 0,
                     right = 0,
                     minusX = 0,
                     stepFloat = 0;
@@ -245,6 +273,7 @@
                     $fieldMin = $rangeSlider.find(".irs-min");
                     $fieldMax = $rangeSlider.find(".irs-max");
                     $fieldFrom = $rangeSlider.find(".irs-from");
+                    $fieldMiddle = $rangeSlider.find(".irs-middle");
                     $fieldTo = $rangeSlider.find(".irs-to");
                     $fieldSingle = $rangeSlider.find(".irs-single");
                     $grid = $container.find(".irs-grid");
@@ -258,6 +287,7 @@
                     }
                     if (settings.hideFromTo) {
                         $fieldFrom[0].style.display = "none";
+                        $fieldMiddle[0].style.display = "none";
                         $fieldTo[0].style.display = "none";
                         $fieldSingle[0].style.display = "none";
                     }
@@ -363,7 +393,97 @@
                         if (settings.to === settings.max) {
                             $fromSlider.addClass("last");
                         }
-                    }
+
+                    } else if (settings.type === "triple") {
+                        $rangeSlider.append(tripleHTML);
+
+                        $fromSlider = $rangeSlider.find(".from");
+                        $middleSlider = $rangeSlider.find(".middle");
+                        $toSlider = $rangeSlider.find(".to");
+                        $diapason = $rangeSlider.find(".irs-diapason");
+
+                        setDiapason();
+
+                        $fromSlider.on("mousedown", function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            $(this).addClass("last");
+                            $toSlider.removeClass("last");
+                            calcDimensions(e, $(this), "from");
+                            allowDrag = true;
+                            sliderIsActive = true;
+
+                            if (isOldie) {
+                                $("*").prop("unselectable", true);
+                            }
+                        });
+                        $middleSlider.on("mousedown", function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            $(this).addClass("last");
+                            $fromSlider.removeClass("last");
+                            calcDimensions(e, $(this), "middle");
+                            allowDrag = true;
+                            sliderIsActive = true;
+
+                            if (isOldie) {
+                                $("*").prop("unselectable", true);
+                            }
+                        });
+
+                        $toSlider.on("mousedown", function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            $(this).addClass("last");
+                            $fromSlider.removeClass("last");
+                            calcDimensions(e, $(this), "to");
+                            allowDrag = true;
+                            sliderIsActive = true;
+
+                            if (isOldie) {
+                                $("*").prop("unselectable", true);
+                            }
+                        });
+                        if (isTouch) {
+                            $fromSlider.on("touchstart", function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                $(this).addClass("last");
+                                $toSlider.removeClass("last");
+                                calcDimensions(e.originalEvent.touches[0], $(this), "from");
+                                allowDrag = true;
+                                sliderIsActive = true;
+                            });
+                            $middleSlider.on("touchstart", function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                $(this).addClass("last");
+                                $fromSlider.removeClass("last");
+                                calcDimensions(e.originalEvent.touches[0], $(this), "middle");
+                                allowDrag = true;
+                                sliderIsActive = true;
+                            });
+                            $toSlider.on("touchstart", function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                $(this).addClass("last");
+                                $fromSlider.removeClass("last");
+                                calcDimensions(e.originalEvent.touches[0], $(this), "to");
+                                allowDrag = true;
+                                sliderIsActive = true;
+                            });
+                        }
+
+                        if (settings.to === settings.max) {
+                            $fromSlider.addClass("last");
+                        }
+                    }					
 
                     var mouseup = function () {
                         if (allowDrag) {
@@ -371,7 +491,7 @@
                             allowDrag = false;
                             $activeSlider.removeAttr("id");
                             $activeSlider = null;
-                            if (settings.type === "double") {
+                            if (settings.type === "double" || settings.type === "triple") {
                                 setDiapason();
                             }
                             getNumbers();
@@ -403,7 +523,7 @@
                                 allowDrag = false;
                                 $activeSlider.removeAttr("id");
                                 $activeSlider = null;
-                                if (settings.type === "double") {
+                                if (settings.type === "double" || settings.type === "triple") {
                                     setDiapason();
                                 }
                                 getNumbers();
@@ -459,6 +579,19 @@
                             right = $rangeSlider.width() - sliderWidth;
                         }
 
+                    } else if (settings.type === "triple") {
+
+                        if (whichSlider === "from") {
+                            left = 0;
+                            right = parseInt($middleSlider.css("left"), 10);
+						} else if (whichSlider === "middle") {
+                            left = parseInt($fromSlider.css("left"), 10);
+                            right = parseInt($toSlider.css("left"), 10);
+                        } else {
+                            left = parseInt($middleSlider.css("left"), 10);
+                            right = $rangeSlider.width() - sliderWidth;
+                        }
+
                     }
                 };
 
@@ -495,6 +628,16 @@
                         }
                         setDiapason();
 
+                    } else if (settings.type === "triple") {
+
+                        if (x_pure < left) {
+                            x_pure = left;
+                        }
+                        if (x_pure > right) {
+                            x_pure = right;
+                        }
+                        setDiapason();
+
                     }
 
                     $.data($activeSlider[0], "x", x_pure);
@@ -507,13 +650,16 @@
                 var getNumbers = function () {
                     var nums = {
                         fromNumber: 0,
+                        middleNumber: 0,
                         toNumber: 0,
                         fromPers: 0,
+                        middlePers: 0,
                         toPers: 0,
                         fromX: 0,
+                        middleX: 0,
                         toX: 0
                     };
-                    var diapason = settings.max - settings.min, _from, _to;
+                    var diapason = settings.max - settings.min, _from, _middle, _to;
 
                     if (settings.type === "single") {
 
@@ -538,12 +684,45 @@
                         _to = (diapason / 100 * nums.toPers) + parseInt(settings.min, 10);
                         nums.toNumber = Math.round(_to / settings.step) * settings.step;
 
+						if (nums.toNumber < nums.fromNumber)
+							nums.toNumber = nums.fromNumber;
+						
                         if (stepFloat) {
                             nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
                             nums.toNumber = parseInt(nums.toNumber * stepFloat, 10) / stepFloat;
                         }
 
+                    } else if (settings.type === "triple") {
+
+                        nums.fromX = $.data($fromSlider[0], "x") || parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left;
+                        nums.fromPers = nums.fromX / fullWidth * 100;
+                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
+                        nums.fromNumber = Math.round(_from / settings.step) * settings.step;
+
+                        nums.middleX = $.data($middleSlider[0], "x") || parseInt($middleSlider[0].style.left, 10) || $middleSlider.position().left;
+                        nums.middlePers = nums.middleX / fullWidth * 100;
+                        _middle = (diapason / 100 * nums.middlePers) + parseInt(settings.min, 10);
+                        nums.middleNumber = Math.round(_middle / settings.step) * settings.step;
+
+                        nums.toX = $.data($toSlider[0], "x") || parseInt($toSlider[0].style.left, 10) || $toSlider.position().left;
+                        nums.toPers = nums.toX / fullWidth * 100;
+                        _to = (diapason / 100 * nums.toPers) + parseInt(settings.min, 10);
+                        nums.toNumber = Math.round(_to / settings.step) * settings.step;
+
+						if (nums.toNumber < nums.fromNumber)
+							nums.toNumber = nums.fromNumber;
+
+						if (nums.middleNumber < nums.fromNumber)
+							nums.middleNumber = nums.fromNumber;
+
+						if (stepFloat) {
+                            nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
+                            nums.middleNumber = parseInt(nums.middleNumber * stepFloat, 10) / stepFloat;
+                            nums.toNumber = parseInt(nums.toNumber * stepFloat, 10) / stepFloat;
+                        }
+
                     }
+
 
                     numbers = nums;
                     setFields();
@@ -552,11 +731,15 @@
                 var setNumbers = function () {
                     var nums = {
                         fromNumber: settings.from,
+                        middleNumber: settings.middle,
                         toNumber: settings.to,
                         fromPers: 0,
+                        middlePers: 0,
                         toPers: 0,
                         fromX: 0,
                         fromX_pure: 0,
+                        middleX: 0,
+                        middleX_pure: 0,
                         toX: 0,
                         toX_pure: 0
                     };
@@ -586,6 +769,28 @@
 
                         setDiapason();
 
+                    } else if (settings.type === "triple") {
+
+                        nums.fromPers = (nums.fromNumber - settings.min) / diapason * 100;
+                        nums.fromX_pure = fullWidth / 100 * nums.fromPers;
+                        nums.fromX = Math.round(nums.fromX_pure);
+                        $fromSlider[0].style.left = nums.fromX + "px";
+                        $.data($fromSlider[0], "x", nums.fromX_pure);
+
+                        nums.middlePers = (nums.middleNumber - settings.min) / diapason * 100;
+                        nums.middleX_pure = fullWidth / 100 * nums.middlePers;
+                        nums.middleX = Math.round(nums.middleX_pure);
+                        $middleSlider[0].style.left = nums.middleX + "px";
+                        $.data($middleSlider[0], "x", nums.middleX_pure);
+
+                        nums.toPers = (nums.toNumber - settings.min) / diapason * 100;
+                        nums.toX_pure = fullWidth / 100 * nums.toPers;
+                        nums.toX = Math.round(nums.toX_pure);
+                        $toSlider[0].style.left = nums.toX + "px";
+                        $.data($toSlider[0], "x", nums.toX_pure);
+
+                        setDiapason();
+
                     }
 
                     numbers = nums;
@@ -593,15 +798,32 @@
                 };
 
                 var setFields = function () {
-                    var _from, _fromW, _fromX,
-                        _to, _toW, _toX,
-                        _single, _singleW, _singleX,
-                        _slW = (sliderWidth / 2);
+                    var _from, _fromD,
+						_middle, _middleD,
+                        _to, _toD,
+                        _single, _singleD,
+						_slW = (sliderWidth / 2);
+					
+					var getFieldsDims = function(field, numX) {
+						var _W = field.outerWidth();
+						var _X = numX - (_W / 2) + _slW;
+
+						if (_X < 0) {
+							_X = 0;
+						}
+
+						if (_X > normalWidth - _W) {
+							_X = normalWidth - _W;
+						}
+
+						return { w: _W, x: _X };
+					}
 
                     if (settings.type === "single") {
 
                         if (!settings.hideText) {
                             $fieldFrom[0].style.display = "none";
+                            $fieldMiddle[0].style.display = "none";
                             $fieldTo[0].style.display = "none";
 
                             _single = settings.prefix +
@@ -609,24 +831,17 @@
                                 settings.postfix;
                             $fieldSingle.html(_single);
 
-                            _singleW = $fieldSingle.outerWidth();
-                            _singleX = numbers.fromX - (_singleW / 2) + _slW;
-                            if (_singleX < 0) {
-                                _singleX = 0;
-                            }
-                            if (_singleX > normalWidth - _singleW) {
-                                _singleX = normalWidth - _singleW;
-                            }
-                            $fieldSingle[0].style.left = _singleX + "px";
-
+							_singleD = getFieldsDims($fieldSingle, numbers.fromX);
+                            $fieldSingle[0].style.left = _singleD.x + "px";
+							
                             if (!settings.hideMinMax && !settings.hideFromTo) {
-                                if (_singleX < fieldMinWidth) {
+                                if (_singleD.x < fieldMinWidth) {
                                     $fieldMin[0].style.display = "none";
                                 } else {
                                     $fieldMin[0].style.display = "block";
                                 }
 
-                                if (_singleX + _singleW > normalWidth - fieldMaxWidth) {
+                                if (_singleD.x + _singleD.w > normalWidth - fieldMaxWidth) {
                                     $fieldMax[0].style.display = "none";
                                 } else {
                                     $fieldMax[0].style.display = "block";
@@ -639,6 +854,8 @@
                     } else if (settings.type === "double") {
 
                         if (!settings.hideText) {
+                            $fieldMiddle[0].style.display = "none";
+
                             _from = settings.prefix +
                                 prettify(numbers.fromNumber) +
                                 settings.postfix;
@@ -649,7 +866,9 @@
                             if (numbers.fromNumber !== numbers.toNumber) {
                                 _single = settings.prefix +
                                     prettify(numbers.fromNumber) +
-                                    " — " + settings.prefix +
+									settings.postfix +
+                                    " — " +
+									settings.prefix +
                                     prettify(numbers.toNumber) +
                                     settings.postfix;
                             } else {
@@ -662,37 +881,17 @@
                             $fieldTo.html(_to);
                             $fieldSingle.html(_single);
 
-                            _fromW = $fieldFrom.outerWidth();
-                            _fromX = numbers.fromX - (_fromW / 2) + _slW;
-                            if (_fromX < 0) {
-                                _fromX = 0;
-                            }
-                            if (_fromX > normalWidth - _fromW) {
-                                _fromX = normalWidth - _fromW;
-                            }
-                            $fieldFrom[0].style.left = _fromX + "px";
+							_fromD = getFieldsDims($fieldFrom, numbers.fromX);
+                            $fieldFrom[0].style.left = _fromD.x + "px";
 
-                            _toW = $fieldTo.outerWidth();
-                            _toX = numbers.toX - (_toW / 2) + _slW;
-                            if (_toX < 0) {
-                                _toX = 0;
-                            }
-                            if (_toX > normalWidth - _toW) {
-                                _toX = normalWidth - _toW;
-                            }
-                            $fieldTo[0].style.left = _toX + "px";
+							_toD = getFieldsDims($fieldTo, numbers.toX);
+                            $fieldTo[0].style.left = _toD.x + "px";
 
-                            _singleW = $fieldSingle.outerWidth();
-                            _singleX = numbers.fromX + ((numbers.toX - numbers.fromX) / 2) - (_singleW / 2) + _slW;
-                            if (_singleX < 0) {
-                                _singleX = 0;
-                            }
-                            if (_singleX > normalWidth - _singleW) {
-                                _singleX = normalWidth - _singleW;
-                            }
-                            $fieldSingle[0].style.left = _singleX + "px";
+							_singleD = getFieldsDims($fieldSingle, numbers.fromX);
+							_singleD.x = numbers.fromX + ((numbers.toX - numbers.fromX) / 2) - (_singleD.w / 2) + _slW;
+                            $fieldSingle[0].style.left = _singleD.x + "px";
 
-                            if (_fromX + _fromW < _toX) {
+                            if (_fromD.x + _fromD.w < _toD.x) {
                                 $fieldSingle[0].style.display = "none";
                                 $fieldFrom[0].style.display = "block";
                                 $fieldTo[0].style.display = "block";
@@ -703,13 +902,141 @@
                             }
 
                             if (!settings.hideMinMax && !settings.hideFromTo) {
-                                if (_singleX < fieldMinWidth || _fromX < fieldMinWidth) {
+                                if (_singleD.x < fieldMinWidth || _fromD.x < fieldMinWidth) {
                                     $fieldMin[0].style.display = "none";
                                 } else {
                                     $fieldMin[0].style.display = "block";
                                 }
 
-                                if (_singleX + _singleW > normalWidth - fieldMaxWidth || _toX + _toW > normalWidth - fieldMaxWidth) {
+                                if (_singleD.x + _singleD.w > normalWidth - fieldMaxWidth || _toD.x + _toD.w > normalWidth - fieldMaxWidth) {
+                                    $fieldMax[0].style.display = "none";
+                                } else {
+                                    $fieldMax[0].style.display = "block";
+                                }
+                            }
+						}
+
+                    } else if (settings.type === "triple") {
+
+                        if (!settings.hideText) {
+                            _from = settings.prefix +
+                                prettify(numbers.fromNumber) +
+                                settings.postfix;
+                            _middle = settings.prefix +
+                                prettify(numbers.middleNumber) +
+                                settings.postfix;
+                            _to = settings.prefix +
+                                prettify(numbers.toNumber) +
+                                settings.postfix;
+
+                            $fieldFrom.html(_from);
+                            $fieldMiddle.html(_middle);
+                            $fieldTo.html(_to);
+                            $fieldSingle.html(_single);
+
+							_fromD = getFieldsDims($fieldFrom, numbers.fromX);
+							_middleD = getFieldsDims($fieldMiddle, numbers.middleX);
+							_toD = getFieldsDims($fieldTo, numbers.toX);
+							_singleD = getFieldsDims($fieldSingle, numbers.fromX);
+							_singleD.x = numbers.fromX + ((numbers.toX - numbers.fromX) / 2) - (_singleD.w / 2) + _slW;
+
+							if (_fromD.x + _fromD.w >= _middleD.x) {
+								if (numbers.fromNumber !== numbers.middleNumber) {
+									_from = settings.prefix +
+										prettify(numbers.fromNumber) +
+										settings.postfix +
+										" — " +
+										settings.prefix +
+										prettify(numbers.middleNumber) +
+										settings.postfix;
+									
+		                            $fieldFrom.html(_from);
+									_fromD = getFieldsDims($fieldFrom, numbers.fromX);
+								}
+
+								$fieldSingle[0].style.display = "none";
+								$fieldFrom[0].style.display = "block";
+								$fieldMiddle[0].style.display = "none";
+								$fieldTo[0].style.display = "block";
+							}
+							
+							if (_middleD.x + _middleD.w >= _toD.x) {
+								if (numbers.middleNumber !== numbers.toNumber) {
+										_to = settings.prefix +
+											prettify(numbers.middleNumber) +
+											settings.postfix +
+											" — " +
+											settings.prefix +
+											prettify(numbers.toNumber) +
+											settings.postfix;
+
+										$fieldTo.html(_to);
+										_toD = getFieldsDims($fieldTo, numbers.toX);
+									}
+
+									$fieldSingle[0].style.display = "none";
+									$fieldFrom[0].style.display = "block";
+									$fieldMiddle[0].style.display = "none";
+									$fieldTo[0].style.display = "block";
+							}
+
+							if (_fromD.x + _fromD.w < _toD.x) {
+								if (!(_fromD.x + _fromD.w >= _middleD.x || _middleD.x + _middleD.w >= _toD.x)) {
+									$fieldSingle[0].style.display = "none";
+									$fieldFrom[0].style.display = "block";
+									$fieldMiddle[0].style.display = "block";
+									$fieldTo[0].style.display = "block";
+								}
+                            } else {
+								if (numbers.fromNumber !== numbers.toNumber) {
+									_single = settings.prefix +
+										prettify(numbers.fromNumber) +
+										settings.postfix;
+									
+									if (numbers.fromNumber !== numbers.middleNumber && numbers.middleNumber !== numbers.toNumber) {
+										_single += " — " +
+											settings.prefix +
+											prettify(numbers.fromNumber) +
+											settings.postfix;
+									}
+									
+									_single += " — " +
+										settings.prefix +
+										prettify(numbers.toNumber) +
+										settings.postfix;
+								} else {
+									_single = settings.prefix +
+										prettify(numbers.fromNumber) +
+										settings.postfix;
+								}
+
+								$fieldSingle[0].style.display = "block";
+                                $fieldFrom[0].style.display = "none";
+                                $fieldMiddle[0].style.display = "none";
+                                $fieldTo[0].style.display = "none";
+                            }
+
+                            $fieldFrom.html(_from);
+                            $fieldMiddle.html(_middle);
+                            $fieldTo.html(_to);
+                            $fieldSingle.html(_single);
+
+							_fromD = getFieldsDims($fieldFrom, numbers.fromX);
+							_toD = getFieldsDims($fieldTo, numbers.toX);
+
+                            $fieldFrom[0].style.left = _fromD.x + "px";
+                            $fieldMiddle[0].style.left = _middleD.x + "px";
+                            $fieldTo[0].style.left = _toD.x + "px";
+                            $fieldSingle[0].style.left = _singleD.x + "px";
+
+                            if (!settings.hideMinMax && !settings.hideFromTo) {
+                                if (_singleD.x < fieldMinWidth || _fromD.x < fieldMinWidth) {
+                                    $fieldMin[0].style.display = "none";
+                                } else {
+                                    $fieldMin[0].style.display = "block";
+                                }
+
+                                if (_singleD.x + _singleD.w > normalWidth - fieldMaxWidth || _toD.x + _toD.w > normalWidth - fieldMaxWidth) {
                                     $fieldMax[0].style.display = "none";
                                 } else {
                                     $fieldMax[0].style.display = "block";
@@ -717,7 +1044,7 @@
                             }
                         }
 
-                        slider.attr("value", parseInt(numbers.fromNumber, 10) + ";" + parseInt(numbers.toNumber, 10));
+                        slider.attr("value", parseInt(numbers.fromNumber, 10) + ";" + parseInt(numbers.middleNumber, 10) + ";" + parseInt(numbers.toNumber, 10));
 
                     }
 
