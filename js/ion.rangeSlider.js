@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.9.1
+// version 1.9.0
 // © 2013 Denis Ineshin | IonDen.com
 // © 2013 Cezary Piekacz | cezex.me
 //
@@ -465,7 +465,10 @@
                                 e.preventDefault();
                                 e.stopPropagation();
 
-                                $(this).addClass("last");
+								fromDiff = $.data($middleSlider[0], "x") - $.data($fromSlider[0], "x");
+								toDiff = $.data($toSlider[0], "x") - $.data($middleSlider[0], "x");
+
+								$(this).addClass("last");
                                 $fromSlider.removeClass("last");
                                 calcDimensions(e.originalEvent.touches[0], $(this), "middle");
                                 allowDrag = true;
