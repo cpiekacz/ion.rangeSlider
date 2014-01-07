@@ -1,4 +1,4 @@
-# Ion.Range Slider 1.9.0
+# Ion.Range Slider 1.9.1
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
@@ -117,6 +117,11 @@ $("#someID").ionRangeSlider();
             <td>true</td>
             <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
         </tr>
+        <tr>
+            <td>dragSliders</td>
+            <td>false</td>
+            <td>Optional property, allow to move left and right sliders simultaneously with middle one</td>
+        </tr>
     </tbody>
 </table>
 
@@ -207,6 +212,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* January 07, 2014 - added support for moving left and right sliders simultaneously with middle one
 * January 03, 2014 - added support for the third (middle) slider
 * October 31, 2013 - Fixed bugs: # 13, 31, 35, 37, 40, and some code optimisations
 * October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.

@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.9.0
+// version 1.9.1
 // © 2013 Denis Ineshin | IonDen.com
 // © 2013 Cezary Piekacz | cezex.me
 //
@@ -77,12 +77,11 @@
                     hideMinMax: false,
                     hideFromTo: false,
                     prettify: true,
+					dragSliders: false,
                     onChange: null,
                     onLoad: null,
                     onFinish: null
                 }, options);
-
-
 
                 var slider = $(this),
                     self = this;
@@ -404,6 +403,8 @@
 
                         setDiapason();
 
+						var fromDiff, toDiff;
+						
                         $fromSlider.on("mousedown", function (e) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -421,6 +422,9 @@
                         $middleSlider.on("mousedown", function (e) {
                             e.preventDefault();
                             e.stopPropagation();
+							
+							fromDiff = $.data($middleSlider[0], "x") - $.data($fromSlider[0], "x");
+							toDiff = $.data($toSlider[0], "x") - $.data($middleSlider[0], "x");
 
                             $(this).addClass("last");
                             $fromSlider.removeClass("last");
@@ -432,7 +436,6 @@
                                 $("*").prop("unselectable", true);
                             }
                         });
-
                         $toSlider.on("mousedown", function (e) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -511,6 +514,13 @@
 
                     $body.on("mousemove.irs" + self.pluginCount, function (e) {
                         if (allowDrag) {
+							if (settings.dragSliders && $activeSlider.hasClass('middle')) {
+								$fromSlider.css('left', ($middleSlider.position().left - fromDiff) + 'px');
+								$toSlider.css('left', ($middleSlider.position().left + toDiff) + 'px');
+								$.data($fromSlider[0], "x", $.data($middleSlider[0], "x") - fromDiff);
+								$.data($toSlider[0], "x", $.data($middleSlider[0], "x") + toDiff);
+							}
+
                             mouseX = e.pageX;
                             dragSlider();
                         }
@@ -531,6 +541,13 @@
                         });
                         $window.on("touchmove", function (e) {
                             if (allowDrag) {
+								if (settings.dragSliders && $activeSlider.hasClass('middle')) {
+									$fromSlider.css('left', ($middleSlider.position().left - fromDiff) + 'px');
+									$toSlider.css('left', ($middleSlider.position().left + toDiff) + 'px');
+									$.data($fromSlider[0], "x", $.data($middleSlider[0], "x") - fromDiff);
+									$.data($toSlider[0], "x", $.data($middleSlider[0], "x") + toDiff);
+								}
+
                                 mouseX = e.originalEvent.touches[0].pageX;
                                 dragSlider();
                             }
@@ -585,8 +602,13 @@
                             left = 0;
                             right = parseInt($middleSlider.css("left"), 10);
 						} else if (whichSlider === "middle") {
-                            left = parseInt($fromSlider.css("left"), 10);
-                            right = parseInt($toSlider.css("left"), 10);
+							if (settings.dragSliders) {
+								left = parseInt($middleSlider.css("left"), 10) - parseInt($fromSlider.css("left"), 10);
+								right = $rangeSlider.width() - sliderWidth - (parseInt($toSlider.css("left"), 10) - parseInt($middleSlider.css("left"), 10));
+							} else {
+								left = parseInt($fromSlider.css("left"), 10);
+								right = parseInt($toSlider.css("left"), 10);
+							}
                         } else {
                             left = parseInt($middleSlider.css("left"), 10);
                             right = $rangeSlider.width() - sliderWidth;
